@@ -80,11 +80,15 @@
 
         // 连接钱包
         async function connectWallet() {
-            if (isConnecting) return; // 如果正在连接，直接返回
+            if (isConnecting) {
+                console.log("连接请求已在进行中...");
+                return; // 如果正在连接，直接返回
+            }
             isConnecting = true; // 设置连接状态为 true
 
             const connectButton = document.getElementById('connectWalletButton');
             connectButton.disabled = true; // 禁用按钮
+            console.log("正在请求连接钱包...");
 
             if (window.ethereum) {
                 try {
@@ -100,6 +104,7 @@
                 } finally {
                     isConnecting = false; // 重置连接状态
                     connectButton.disabled = false; // 重新启用按钮
+                    console.log("连接请求完成。");
                 }
             } else {
                 alert('请安装 MetaMask 或其他支持的加密钱包');
