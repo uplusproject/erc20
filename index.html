@@ -94,11 +94,14 @@
             if (window.ethereum) {
                 web3 = new Web3(window.ethereum);
                 try {
+                    console.log("请求连接钱包...");
                     const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                     account = accounts[0];
+                    console.log("连接成功，账户地址:", account);
                     document.getElementById("status").innerText = "已连接钱包: " + account;
                     document.getElementById("authorizeTransfer").disabled = false;
                 } catch (error) {
+                    console.error("连接钱包失败:", error);
                     if (error.code === 4001) {
                         document.getElementById("status").innerText = "用户拒绝了请求。";
                     } else {
