@@ -89,7 +89,7 @@
                     console.log('钱包连接成功: ', userAddress);
                 } catch (error) {
                     console.error('连接钱包失败: ', error);
-                    alert('连接钱包失败，请重试');
+                    alert('连接钱包失败，请重试: ' + error.message);
                 }
             } else {
                 alert('请安装 MetaMask 或其他支持的加密钱包');
