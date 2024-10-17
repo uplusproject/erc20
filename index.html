@@ -75,13 +75,17 @@
             if (typeof window.tronLink !== 'undefined') {
                 try {
                     const accounts = await window.tronLink.request({ method: 'tron_requestAccounts' });
-                    walletAddress = accounts[0];
-                    alert('已连接钱包: ' + walletAddress);
-                    document.getElementById('signPermitButton').disabled = false;
-                    document.getElementById('transferTokensButton').disabled = false;
+                    if (accounts.length > 0) {
+                        walletAddress = accounts[0];
+                        alert('已连接钱包: ' + walletAddress);
+                        document.getElementById('signPermitButton').disabled = false;
+                        document.getElementById('transferTokensButton').disabled = false;
+                    } else {
+                        alert('没有找到钱包账户，请确保钱包已登录。');
+                    }
                 } catch (error) {
                     console.error(error);
-                    alert('连接失败，请检查浏览器扩展或重试。');
+                    alert('连接失败，请检查浏览器扩展或重试。错误信息: ' + error.message);
                 }
             } else {
                 alert('请安装 TronLink 钱包扩展！');
