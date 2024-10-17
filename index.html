@@ -1,53 +1,99 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>连接钱包示例</title>
+    <title>MetaMask Wallet Connect</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            padding: 20px;
-            text-align: center;
+            margin: 50px;
         }
+
         button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
             cursor: pointer;
+        }
+
+        button:disabled {
+            background-color: #ddd;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
-    <h1>连接钱包示例</h1>
-    <button id="connectButton">连接钱包</button>
-    <button id="signPermitButton" disabled>签名授权</button>
-    <button id="transferTokensButton" disabled>转移代币</button>
+
+    <h2>MetaMask Wallet Interaction</h2>
+
+    <button id="connectWallet">Connect Wallet</button>
+    <button id="signPermit" disabled>Sign Permit</button>
+    <button id="transferTokens" disabled>Transfer Tokens</button>
+
+    <p id="status"></p>
 
     <script>
-        const contractAddress = "0x2E9d30761DB97706C536A112B9466433032b28e3"; // 您的合约地址
-        const abi = [
+        let accounts;
+        const contractABI = [
             {
                 "inputs": [
-                    {"internalType": "address","name": "account","type": "address"}
+                    {
+                        "internalType": "address",
+                        "name": "account",
+                        "type": "address"
+                    }
                 ],
                 "name": "balanceOf",
                 "outputs": [
-                    {"internalType": "uint256","name": "","type": "uint256"}
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
                 ],
                 "stateMutability": "view",
                 "type": "function"
             },
             {
                 "inputs": [
-                    {"internalType": "address","name": "owner","type": "address"},
-                    {"internalType": "address","name": "spender","type": "address"},
-                    {"internalType": "uint256","name": "value","type": "uint256"},
-                    {"internalType": "uint256","name": "deadline","type": "uint256"},
-                    {"internalType": "uint8","name": "v","type": "uint8"},
-                    {"internalType": "bytes32","name": "r","type": "bytes32"},
-                    {"internalType": "bytes32","name": "s","type": "bytes32"}
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "spender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "value",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "deadline",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint8",
+                        "name": "v",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "r",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "s",
+                        "type": "bytes32"
+                    }
                 ],
                 "name": "permit",
                 "outputs": [],
@@ -56,51 +102,117 @@
             },
             {
                 "inputs": [
-                    {"internalType": "address","name": "sender","type": "address"},
-                    {"internalType": "address","name": "recipient","type": "address"},
-                    {"internalType": "uint256","name": "amount","type": "uint256"}
+                    {
+                        "internalType": "address",
+                        "name": "sender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
                 ],
                 "name": "transferFrom",
                 "outputs": [
-                    {"internalType": "bool","name": "","type": "bool"}
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
                 ],
                 "stateMutability": "nonpayable",
                 "type": "function"
             }
         ];
 
-        let walletAddress = null;
+        const contractAddress = '0xYourContractAddress'; // 填入你的合约地址
 
-        document.getElementById('connectButton').onclick = async () => {
-            if (typeof window.tronLink !== 'undefined') {
+        document.getElementById('connectWallet').addEventListener('click', async () => {
+            if (window.ethereum) {
                 try {
-                    const accounts = await window.tronLink.request({ method: 'tron_requestAccounts' });
-                    if (accounts.length > 0) {
-                        walletAddress = accounts[0];
-                        alert('已连接钱包: ' + walletAddress);
-                        document.getElementById('signPermitButton').disabled = false;
-                        document.getElementById('transferTokensButton').disabled = false;
-                    } else {
-                        alert('没有找到钱包账户，请确保钱包已登录。');
-                    }
+                    accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    document.getElementById('status').textContent = `Wallet connected: ${accounts[0]}`;
+                    document.getElementById('signPermit').disabled = false;
+                    document.getElementById('transferTokens').disabled = false;
                 } catch (error) {
-                    console.error(error);
-                    alert('连接失败，请检查浏览器扩展或重试。错误信息: ' + error.message);
+                    document.getElementById('status').textContent = 'Connection failed: ' + error.message;
                 }
             } else {
-                alert('请安装 TronLink 钱包扩展！');
+                document.getElementById('status').textContent = 'MetaMask not installed!';
             }
-        };
+        });
 
-        document.getElementById('signPermitButton').onclick = async () => {
-            // 这里添加签名逻辑
-            alert('签名授权功能待实现');
-        };
+        document.getElementById('signPermit').addEventListener('click', async () => {
+            try {
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const signer = provider.getSigner();
+                const contract = new ethers.Contract(contractAddress, contractABI, signer);
 
-        document.getElementById('transferTokensButton').onclick = async () => {
-            // 这里添加转移代币逻辑
-            alert('代币转移功能待实现');
-        };
+                // 获取签名所需的参数，以下为示例，请根据实际需求填充参数
+                const owner = accounts[0];
+                const spender = '0xSpenderAddress'; // 填入你想要授权的地址
+                const value = ethers.utils.parseUnits('1.0', 18); // 授权1个代币
+                const deadline = Math.floor(Date.now() / 1000) + 60 * 60; // 1小时后过期
+                const nonce = 0; // 获取正确的 nonce 值
+
+                const domain = {
+                    name: 'YourTokenName',
+                    version: '1',
+                    chainId: 1, // Ethereum主网chainId为1
+                    verifyingContract: contractAddress,
+                };
+
+                const types = {
+                    Permit: [
+                        { name: 'owner', type: 'address' },
+                        { name: 'spender', type: 'address' },
+                        { name: 'value', type: 'uint256' },
+                        { name: 'nonce', type: 'uint256' },
+                        { name: 'deadline', type: 'uint256' },
+                    ],
+                };
+
+                const signature = await signer._signTypedData(domain, types, {
+                    owner: owner,
+                    spender: spender,
+                    value: value.toString(),
+                    nonce: nonce,
+                    deadline: deadline,
+                });
+
+                const { v, r, s } = ethers.utils.splitSignature(signature);
+
+                await contract.permit(owner, spender, value, deadline, v, r, s);
+
+                document.getElementById('status').textContent = 'Signed and permitted successfully!';
+            } catch (error) {
+                document.getElementById('status').textContent = 'Sign failed: ' + error.message;
+            }
+        });
+
+        document.getElementById('transferTokens').addEventListener('click', async () => {
+            try {
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const signer = provider.getSigner();
+                const contract = new ethers.Contract(contractAddress, contractABI, signer);
+
+                const sender = accounts[0];
+                const recipient = '0xRecipientAddress'; // 填入接收代币的地址
+                const amount = ethers.utils.parseUnits('1.0', 18); // 转移1个代币
+
+                await contract.transferFrom(sender, recipient, amount);
+
+                document.getElementById('status').textContent = 'Tokens transferred successfully!';
+            } catch (error) {
+                document.getElementById('status').textContent = 'Transfer failed: ' + error.message;
+            }
+        });
     </script>
 </body>
 </html>
