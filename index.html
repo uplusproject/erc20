@@ -107,7 +107,14 @@
                     signPermitBtn.disabled = false;
                     transferTokensBtn.disabled = false;
                 } catch (error) {
-                    statusElement.textContent = '连接失败，请检查浏览器扩展或重试。';
+                    // 输出详细的错误信息
+                    if (error.code === 4001) {
+                        statusElement.textContent = '请求被拒绝，请重试。';
+                    } else if (error.message.includes('already pending')) {
+                        statusElement.textContent = '连接请求已经在进行中，请稍等。';
+                    } else {
+                        statusElement.textContent = '连接失败，请检查浏览器扩展或重试。';
+                    }
                 }
             } else {
                 statusElement.textContent = '请安装 MetaMask 扩展。';
