@@ -1,176 +1,132 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DApp</title>
+    <title>Wallet Connect DApp</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 20px;
+            text-align: center;
             background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
         }
+
+        h1 {
+            color: #333;
+        }
+
         button {
-            padding: 10px;
-            margin: 5px;
-            border: none;
-            background-color: #007bff;
+            background-color: #4CAF50;
             color: white;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
             cursor: pointer;
+            font-size: 16px;
         }
+
         button:hover {
-            background-color: #0056b3;
+            background-color: #45a049;
         }
-        select {
-            padding: 10px;
-            margin: 5px;
+
+        #status {
+            margin: 20px 0;
+            color: red;
+        }
+
+        #languageSelector {
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-    <h1 id="title">DApp连接示例</h1>
-    <button id="connectWalletBtn">连接钱包</button>
-    <button id="signPermitBtn" disabled>签名授权</button>
-    <button id="transferTokensBtn" disabled>转移代币</button>
+    <h1 id="title">Connect Your Wallet</h1>
+    <div id="languageSelector">
+        <label for="languages">Select Language:</label>
+        <select id="languages" onchange="changeLanguage()">
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+            <option value="ko">한국어</option>
+            <option value="ja">日本語</option>
+        </select>
+    </div>
+    <button id="connectButton">Connect Wallet</button>
+    <div id="status"></div>
 
-    <select id="languageSelect">
-        <option value="zh">中文</option>
-        <option value="en">English</option>
-        <option value="ja">日本語</option>
-        <option value="ko">한국어</option>
-    </select>
-
-    <p id="status">未连接钱包，请检查浏览器扩展或重试。</p>
-
-    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
     <script>
-        const contractAddress = "0x2E9d30761DB97706C536A112B9466433032b28e3";
-        const abi = [
-            {
-                "inputs": [{"internalType": "address","name": "account","type": "address"}],
-                "name": "balanceOf",
-                "outputs": [{"internalType": "uint256","name": "","type": "uint256"}],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address","name": "owner","type": "address"},
-                    {"internalType": "address","name": "spender","type": "address"},
-                    {"internalType": "uint256","name": "value","type": "uint256"},
-                    {"internalType": "uint256","name": "deadline","type": "uint256"},
-                    {"internalType": "uint8","name": "v","type": "uint8"},
-                    {"internalType": "bytes32","name": "r","type": "bytes32"},
-                    {"internalType": "bytes32","name": "s","type": "bytes32"}
-                ],
-                "name": "permit",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {"internalType": "address","name": "sender","type": "address"},
-                    {"internalType": "address","name": "recipient","type": "address"},
-                    {"internalType": "uint256","name": "amount","type": "uint256"}
-                ],
-                "name": "transferFrom",
-                "outputs": [{"internalType": "bool","name": "","type": "bool"}],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            }
-        ];
-
-        let web3;
-        let currentAccount;
-        let connecting = false; // 添加连接状态变量
-
-        const titleElement = document.getElementById('title');
+        let isWalletConnecting = false;
         const statusElement = document.getElementById('status');
-
-        const connectWalletBtn = document.getElementById('connectWalletBtn');
-        const signPermitBtn = document.getElementById('signPermitBtn');
-        const transferTokensBtn = document.getElementById('transferTokensBtn');
-        const languageSelect = document.getElementById('languageSelect');
-
-        connectWalletBtn.addEventListener('click', connectWallet);
-        signPermitBtn.addEventListener('click', signPermit);
-        transferTokensBtn.addEventListener('click', transferTokens);
-        languageSelect.addEventListener('change', changeLanguage);
-
-        async function connectWallet() {
-            if (connecting) return; // 如果已经在连接，直接返回
-            connecting = true; // 设置连接状态为正在连接
-
-            if (typeof window.ethereum !== 'undefined') {
-                try {
-                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    currentAccount = accounts[0];
-                    web3 = new Web3(window.ethereum);
-                    statusElement.textContent = '钱包连接成功！当前账户: ' + currentAccount;
-                    signPermitBtn.disabled = false;
-                    transferTokensBtn.disabled = false;
-                } catch (error) {
-                    // 输出详细的错误信息
-                    if (error.code === 4001) {
-                        statusElement.textContent = '请求被拒绝，请重试。';
-                    } else if (error.message.includes('already pending')) {
-                        statusElement.textContent = '连接请求已经在进行中，请稍等。';
-                    } else {
-                        statusElement.textContent = '连接失败，请检查浏览器扩展或重试。';
-                    }
-                } finally {
-                    connecting = false; // 无论成功与否，重置连接状态
-                }
-            } else {
-                statusElement.textContent = '请安装 MetaMask 扩展。';
-                connecting = false; // 无论如何重置连接状态
+        const titleElement = document.getElementById('title');
+        const languages = {
+            en: {
+                title: "Connect Your Wallet",
+                connectButton: "Connect Wallet",
+                connecting: "Connecting to wallet...",
+                success: "Wallet connected successfully",
+                fail: "Failed to connect wallet. Please check your browser extension or try again.",
+                walletNotFound: "MetaMask not installed. Please install MetaMask."
+            },
+            zh: {
+                title: "连接您的钱包",
+                connectButton: "连接钱包",
+                connecting: "正在连接钱包...",
+                success: "钱包连接成功",
+                fail: "连接失败，请检查浏览器扩展或重试。",
+                walletNotFound: "未安装MetaMask。请先安装MetaMask。"
+            },
+            ko: {
+                title: "지갑 연결하기",
+                connectButton: "지갑 연결",
+                connecting: "지갑에 연결 중...",
+                success: "지갑이 성공적으로 연결되었습니다",
+                fail: "연결 실패: 브라우저 확장 프로그램을 확인하거나 다시 시도하세요.",
+                walletNotFound: "MetaMask가 설치되지 않았습니다. MetaMask를 설치하세요."
+            },
+            ja: {
+                title: "ウォレットを接続",
+                connectButton: "ウォレットを接続する",
+                connecting: "ウォレットに接続中...",
+                success: "ウォレットが正常に接続されました",
+                fail: "接続に失敗しました。ブラウザ拡張機能を確認するか、もう一度お試しください。",
+                walletNotFound: "MetaMaskがインストールされていません。MetaMaskをインストールしてください。"
             }
-        }
-
-        async function signPermit() {
-            // 签名逻辑
-            // 这里需要添加具体的签名代码
-            console.log('签名授权');
-            statusElement.textContent = '签名成功！';
-        }
-
-        async function transferTokens() {
-            // 转移代币逻辑
-            // 这里需要添加具体的转移代码
-            console.log('转移代币');
-            statusElement.textContent = '代币转移成功！';
-        }
+        };
 
         function changeLanguage() {
-            const language = languageSelect.value;
-            switch (language) {
-                case 'zh':
-                    titleElement.textContent = 'DApp连接示例';
-                    statusElement.textContent = '未连接钱包，请检查浏览器扩展或重试。';
-                    signPermitBtn.textContent = '签名授权';
-                    transferTokensBtn.textContent = '转移代币';
-                    break;
-                case 'en':
-                    titleElement.textContent = 'DApp Connection Example';
-                    statusElement.textContent = 'Not connected. Please check your browser extension or try again.';
-                    signPermitBtn.textContent = 'Sign Permit';
-                    transferTokensBtn.textContent = 'Transfer Tokens';
-                    break;
-                case 'ja':
-                    titleElement.textContent = 'DApp接続例';
-                    statusElement.textContent = '未接続。ブラウザ拡張機能を確認するか、再試行してください。';
-                    signPermitBtn.textContent = '署名許可';
-                    transferTokensBtn.textContent = 'トークンを転送する';
-                    break;
-                case 'ko':
-                    titleElement.textContent = 'DApp 연결 예';
-                    statusElement.textContent = '연결되지 않았습니다. 브라우저 확장을 확인하거나 다시 시도하십시오.';
-                    signPermitBtn.textContent = '서명 허용';
-                    transferTokensBtn.textContent = '토큰 전송';
-                    break;
+            const language = document.getElementById('languages').value;
+            const selectedLang = languages[language];
+            titleElement.innerText = selectedLang.title;
+            document.getElementById('connectButton').innerText = selectedLang.connectButton;
+        }
+
+        async function connectWallet() {
+            if (isWalletConnecting) {
+                console.log("连接请求已经挂起，请等待...");
+                return;
+            }
+
+            statusElement.innerText = languages[document.getElementById('languages').value].connecting;
+            isWalletConnecting = true;
+
+            try {
+                if (window.ethereum) {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    statusElement.innerText = languages[document.getElementById('languages').value].success + ": " + accounts[0];
+                    console.log("钱包已连接:", accounts[0]);
+                } else {
+                    statusElement.innerText = languages[document.getElementById('languages').value].walletNotFound;
+                }
+            } catch (error) {
+                console.error("连接钱包失败:", error);
+                statusElement.innerText = languages[document.getElementById('languages').value].fail;
+            } finally {
+                isWalletConnecting = false;
             }
         }
+
+        document.getElementById('connectButton').addEventListener('click', connectWallet);
     </script>
 </body>
 </html>
