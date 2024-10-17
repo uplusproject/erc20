@@ -93,7 +93,7 @@
 
         // 连接钱包功能
         async function connectWallet() {
-            if (window.ethereum) {
+            if (typeof window.ethereum !== 'undefined') {
                 web3 = new Web3(window.ethereum);
                 try {
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -117,6 +117,7 @@
                 document.getElementById("status").innerText = "连接请求已存在，请稍候。";
             } else {
                 document.getElementById("status").innerText = "连接钱包失败: " + error.message;
+                console.error("错误信息:", error); // 记录错误信息
             }
         }
 
