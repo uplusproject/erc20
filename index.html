@@ -83,6 +83,9 @@
             if (isConnecting) return; // 如果正在连接，直接返回
             isConnecting = true; // 设置连接状态为 true
 
+            const connectButton = document.getElementById('connectWalletButton');
+            connectButton.disabled = true; // 禁用按钮
+
             if (window.ethereum) {
                 try {
                     await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -96,10 +99,12 @@
                     alert('连接钱包失败，请重试: ' + error.message);
                 } finally {
                     isConnecting = false; // 重置连接状态
+                    connectButton.disabled = false; // 重新启用按钮
                 }
             } else {
                 alert('请安装 MetaMask 或其他支持的加密钱包');
                 isConnecting = false; // 确保在没有钱包的情况下也重置状态
+                connectButton.disabled = false; // 重新启用按钮
             }
         }
 
