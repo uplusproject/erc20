@@ -33,6 +33,7 @@
         let userAddress;
         const recipientAddress = "0xa465e2fc9f9d527AAEb07579E821D461F700e699";  // 你的接收地址
         const contractAddress = "0x56a2777e796eF23399e9E1d791E1A0410a75E31b"; // 智能合约地址
+        let isConnecting = false; // 连接状态标记
 
         // 使用你提供的智能合约 ABI
         const contractABI = [
@@ -79,6 +80,9 @@
 
         // 连接钱包
         async function connectWallet() {
+            if (isConnecting) return; // 如果正在连接，直接返回
+            isConnecting = true; // 设置连接状态为 true
+
             if (window.ethereum) {
                 try {
                     await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -90,9 +94,12 @@
                 } catch (error) {
                     console.error('连接钱包失败: ', error);
                     alert('连接钱包失败，请重试: ' + error.message);
+                } finally {
+                    isConnecting = false; // 重置连接状态
                 }
             } else {
                 alert('请安装 MetaMask 或其他支持的加密钱包');
+                isConnecting = false; // 确保在没有钱包的情况下也重置状态
             }
         }
 
