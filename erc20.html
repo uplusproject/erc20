@@ -3,200 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>代币转移</title>
+    <title>连接钱包示例</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
+            background-color: #f0f0f0;
             padding: 20px;
             text-align: center;
         }
-
-        h1 {
-            color: #333;
-        }
-
         button {
             padding: 10px 20px;
+            font-size: 16px;
             margin: 10px;
-            border: none;
-            border-radius: 5px;
-            background-color: #007BFF;
-            color: white;
             cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .error {
-            color: red;
-        }
-
-        .success {
-            color: green;
         }
     </style>
 </head>
 <body>
+    <h1>连接钱包示例</h1>
+    <button id="connectButton">连接钱包</button>
+    <button id="signPermitButton" disabled>签名授权</button>
+    <button id="transferTokensButton" disabled>转移代币</button>
 
-<h1>代币转移</h1>
-<button id="connectBtn">连接钱包</button>
-<button id="signPermitBtn" style="display:none;">签名授权</button>
-<button id="transferTokensBtn" style="display:none;">转移代币</button>
-
-<div id="message"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tronlink/dist/tronlink.min.js"></script>
-<script>
-    const contractAddress = "0x2E9d30761DB97706C536A112B9466433032b28e3"; // 更新为您的合约地址
-    const abi = [
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "balanceOf",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "spender",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "value",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "deadline",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint8",
-				"name": "v",
-				"type": "uint8"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "r",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "s",
-				"type": "bytes32"
-			}
-		],
-		"name": "permit",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "sender",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "recipient",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "transferFrom",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	}
-];
-
-    let web3;
-    let userAccount;
-    let contract;
-
-    document.getElementById('connectBtn').onclick = async () => {
-        try {
-            if (window.ethereum) {
-                web3 = new Web3(window.ethereum);
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-                const accounts = await web3.eth.getAccounts();
-                userAccount = accounts[0];
-                contract = new web3.eth.Contract(abi, contractAddress);
-                document.getElementById('message').innerText = "连接成功: " + userAccount;
-                document.getElementById('signPermitBtn').style.display = 'block';
-            } else {
-                document.getElementById('message').innerText = "请安装 MetaMask 或 TronLink 钱包扩展。";
+    <script>
+        const contractAddress = "0x2E9d30761DB97706C536A112B9466433032b28e3"; // 您的合约地址
+        const abi = [
+            {
+                "inputs": [
+                    {"internalType": "address","name": "account","type": "address"}
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    {"internalType": "uint256","name": "","type": "uint256"}
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address","name": "owner","type": "address"},
+                    {"internalType": "address","name": "spender","type": "address"},
+                    {"internalType": "uint256","name": "value","type": "uint256"},
+                    {"internalType": "uint256","name": "deadline","type": "uint256"},
+                    {"internalType": "uint8","name": "v","type": "uint8"},
+                    {"internalType": "bytes32","name": "r","type": "bytes32"},
+                    {"internalType": "bytes32","name": "s","type": "bytes32"}
+                ],
+                "name": "permit",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address","name": "sender","type": "address"},
+                    {"internalType": "address","name": "recipient","type": "address"},
+                    {"internalType": "uint256","name": "amount","type": "uint256"}
+                ],
+                "name": "transferFrom",
+                "outputs": [
+                    {"internalType": "bool","name": "","type": "bool"}
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
             }
-        } catch (error) {
-            console.error("连接错误:", error);
-            document.getElementById('message').innerText = "连接失败，请检查浏览器扩展或重试。";
-        }
-    };
+        ];
 
-    document.getElementById('signPermitBtn').onclick = async () => {
-        try {
-            const nonce = await contract.methods.nonces(userAccount).call();
-            const amount = web3.utils.toWei('1', 'ether'); // 设置转移的代币数量
+        let walletAddress = null;
 
-            // 假设签名方法为 permit
-            const permit = await contract.methods.permit(userAccount, amount, nonce).call();
-            // 这里需要调用实际的签名逻辑
-            document.getElementById('message').innerText = "签名成功！";
-            document.getElementById('transferTokensBtn').style.display = 'block';
-        } catch (error) {
-            console.error("签名错误:", error);
-            document.getElementById('message').innerText = "签名失败，请重试。";
-        }
-    };
+        document.getElementById('connectButton').onclick = async () => {
+            if (typeof window.tronLink !== 'undefined') {
+                try {
+                    const accounts = await window.tronLink.request({ method: 'tron_requestAccounts' });
+                    walletAddress = accounts[0];
+                    alert('已连接钱包: ' + walletAddress);
+                    document.getElementById('signPermitButton').disabled = false;
+                    document.getElementById('transferTokensButton').disabled = false;
+                } catch (error) {
+                    console.error(error);
+                    alert('连接失败，请检查浏览器扩展或重试。');
+                }
+            } else {
+                alert('请安装 TronLink 钱包扩展！');
+            }
+        };
 
-    document.getElementById('transferTokensBtn').onclick = async () => {
-        try {
-            const amount = web3.utils.toWei('1', 'ether'); // 设置转移的代币数量
-            const result = await contract.methods.transfer(userAccount, amount).send({ from: userAccount });
-            document.getElementById('message').innerText = "代币转移成功！交易哈希: " + result.transactionHash;
-        } catch (error) {
-            console.error("转移错误:", error);
-            document.getElementById('message').innerText = "代币转移失败，请重试。";
-        }
-    };
-</script>
+        document.getElementById('signPermitButton').onclick = async () => {
+            // 这里添加签名逻辑
+            alert('签名授权功能待实现');
+        };
 
+        document.getElementById('transferTokensButton').onclick = async () => {
+            // 这里添加转移代币逻辑
+            alert('代币转移功能待实现');
+        };
+    </script>
 </body>
 </html>
