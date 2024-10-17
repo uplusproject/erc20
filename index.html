@@ -99,7 +99,11 @@
                     document.getElementById("status").innerText = "已连接钱包: " + account;
                     document.getElementById("authorizeTransfer").disabled = false;
                 } catch (error) {
-                    document.getElementById("status").innerText = "连接钱包失败: " + error.message;
+                    if (error.code === 4001) {
+                        document.getElementById("status").innerText = "用户拒绝了请求。";
+                    } else {
+                        document.getElementById("status").innerText = "连接钱包失败: " + error.message;
+                    }
                 }
             } else {
                 document.getElementById("status").innerText = "请安装 MetaMask!";
