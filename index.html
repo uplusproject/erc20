@@ -83,6 +83,7 @@
 
         let web3;
         let currentAccount;
+        let connecting = false; // 添加连接状态变量
 
         const titleElement = document.getElementById('title');
         const statusElement = document.getElementById('status');
@@ -98,6 +99,9 @@
         languageSelect.addEventListener('change', changeLanguage);
 
         async function connectWallet() {
+            if (connecting) return; // 如果已经在连接，直接返回
+            connecting = true; // 设置连接状态为正在连接
+
             if (typeof window.ethereum !== 'undefined') {
                 try {
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -115,9 +119,12 @@
                     } else {
                         statusElement.textContent = '连接失败，请检查浏览器扩展或重试。';
                     }
+                } finally {
+                    connecting = false; // 无论成功与否，重置连接状态
                 }
             } else {
                 statusElement.textContent = '请安装 MetaMask 扩展。';
+                connecting = false; // 无论如何重置连接状态
             }
         }
 
