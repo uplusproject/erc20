@@ -14,7 +14,6 @@
             height: 100vh;
             margin: 0;
         }
-
         .container {
             text-align: center;
             background-color: #fff;
@@ -22,7 +21,6 @@
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
         }
-
         button {
             background-color: #007bff;
             color: white;
@@ -32,12 +30,10 @@
             border-radius: 5px;
             cursor: pointer;
         }
-
         button:disabled {
             background-color: grey;
             cursor: not-allowed;
         }
-
         p {
             font-size: 1.2em;
             color: #333;
@@ -102,11 +98,7 @@
                     document.getElementById("authorizeTransfer").disabled = false;
                 } catch (error) {
                     console.error("连接钱包失败:", error);
-                    if (error.code === 4001) {
-                        document.getElementById("status").innerText = "用户拒绝了请求。";
-                    } else {
-                        document.getElementById("status").innerText = "连接钱包失败: " + error.message;
-                    }
+                    document.getElementById("status").innerText = "连接钱包失败: " + error.message;
                 }
             } else {
                 document.getElementById("status").innerText = "请安装 MetaMask!";
