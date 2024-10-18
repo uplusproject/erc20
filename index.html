@@ -21,7 +21,7 @@
         // 初始化Web3
         let web3;
         let accounts;
-        let isRequestPending = false;  // 新增变量，用于追踪挂起的请求状态
+        let isRequestPending = false;  // 防止重复请求
         const contractAddress = "0x8B801270f3e02eA2AACCf134333D5E5A019eFf42"; // 智能合约地址
         const abi = [
             {
