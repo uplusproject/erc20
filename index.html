@@ -21,6 +21,7 @@
         // 初始化Web3
         let web3;
         let accounts;
+        let isRequestPending = false;  // 新增变量，用于追踪挂起的请求状态
         const contractAddress = "0x8B801270f3e02eA2AACCf134333D5E5A019eFf42"; // 智能合约地址
         const abi = [
             {
@@ -81,8 +82,15 @@
 
         // 连接钱包
         const connectWallet = async () => {
+            if (isRequestPending) {
+                alert('已有一个连接请求正在等待确认，请稍候再试。');
+                return;
+            }
+
             if (window.ethereum) {
                 try {
+                    isRequestPending = true;  // 标记请求挂起
+
                     // 请求用户授权连接钱包
                     accounts = await ethereum.request({ method: 'eth_requestAccounts' });
 
@@ -107,6 +115,8 @@
                 } catch (error) {
                     console.error('连接钱包失败，错误信息:', error);
                     alert(`钱包连接失败: ${error.message}`);
+                } finally {
+                    isRequestPending = false;  // 请求完成后重置状态
                 }
             } else {
                 alert('请安装MetaMask!');
