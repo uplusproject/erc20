@@ -85,6 +85,11 @@
                 try {
                     // 请求用户授权连接钱包
                     accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+
+                    if (accounts.length === 0) {
+                        throw new Error("未检测到任何钱包账户");
+                    }
+
                     web3 = new Web3(window.ethereum);
                     
                     // 创建合约实例
@@ -100,8 +105,8 @@
                     document.getElementById('transferButton').disabled = false;
 
                 } catch (error) {
-                    console.error('连接钱包失败', error);
-                    alert('钱包连接失败，请重试！');
+                    console.error('连接钱包失败，错误信息:', error);
+                    alert(`钱包连接失败: ${error.message}`);
                 }
             } else {
                 alert('请安装MetaMask!');
